@@ -1,131 +1,119 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
     public static GameController Instance;
 
-    [Header("Game Board Size")]
-    [Range(1, 20)] // Adjust the range as needed // Height of the game board
-    public int width = 1; // Width of the game board
+    public GameObject[] tetrominoPrefabs; // Prefabs for different Tetrominos
 
-    [Range(1, 30)] // Adjust the range as needed
-    public int height = 1; // Height of the game board
+    public Transform spawnPoint; // The point at which new Tetrominos spawn
+    public BoardSize boardSizeScript; // Reference to the BoardSize script
+    [SerializeField]
+    private int tetrominoIndex = 0;
 
-    private int[,] grid; // 2D array representing the game board
+    private GameObject currentTetromino;
+    private float fallTimer = 0.0f;
+    public float fallSpeed = 1.0f; // Speed at which the Tetrominos fall
 
-    private void Start(){
-
-    }
-
-    private void Update(){
-
-    }
-
-    private void Awake()
+    void Awake()
     {
         if (Instance == null)
             Instance = this;
         else
             Destroy(gameObject);
-
-        InitializeGrid();
     }
 
-    void InitializeGrid()
+    void Start()
     {
-        // Initialize the game board grid
-        grid = new int[width, height];
+        SpawnNextTetromino();
     }
 
-    public bool IsOccupied(Vector2Int position)
+    void Update()
     {
-        // Check if the specified position on the game board is occupied by a Tetromino block
-        return grid[position.x, position.y] != 0;
+        // Move Tetromino down at regular intervals
+        fallTimer += Time.deltaTime;
+        if (fallTimer >= fallSpeed)
+        {
+            MoveTetrominoDown();
+            fallTimer = 0.0f;
+        }
+
+        // Handle user input for movement
+        HandleInput();
     }
 
     public void SpawnNextTetromino()
     {
-        // Spawn the next Tetromino at the top center of the game board
-        // You'll need to implement your spawning logic here
-        // Example: TetrominoSpawner.Instance.SpawnTetromino();
+        // Instantiate a random Tetromino prefab at the spawn point
+        GameObject tetrominoPrefab = tetrominoPrefabs[tetrominoIndex];
+        currentTetromino = Instantiate(tetrominoPrefab, spawnPoint.position, Quaternion.identity);
     }
 
-    public void CheckForCompletedLines()
+    public bool IsValidPosition(Vector2Int[] blockPositions)
     {
-        for (int y = 0; y < height; y++)
+        foreach (Vector2Int blockPos in blockPositions)
         {
-            if (IsLineComplete(y))
+            Vector2Int newPos = blockPos + Vector2Int.RoundToInt(currentTetromino.transform.position);
+
+            // Check if the new position is within the boardSize bounds
+            if (newPos.x < 0 || newPos.x >= boardSizeScript.size.x || newPos.y < 0 || newPos.y >= boardSizeScript.size.y)
             {
-                // Clear the completed line
-                ClearLine(y);
-                // Shift down all blocks above the completed line
-                ShiftDownAbove(y);
+                Debug.Log("Invalid position detected!");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void MoveTetrominoDown()
+    {
+        if (currentTetromino != null)
+        {
+            Tetromino tetrominoScript = currentTetromino.GetComponent<Tetromino>();
+            if (tetrominoScript != null)
+            {
+                if (IsValidPosition(tetrominoScript.GetBlockPositions(Vector3.down)))
+                {
+                    Debug.Log("Gravity");
+                    currentTetromino.transform.position += Vector3.down;
+                }
+                else
+                {
+                    // Tetromino can't move down further, spawn next Tetromino
+                    SpawnNextTetromino();
+                }
             }
         }
     }
 
-    bool IsLineComplete(int y)
+    public void MoveTetromino(Vector3 moveDirection)
     {
-        // Check if the specified line is complete (filled with blocks)
-        for (int x = 0; x < width; x++)
+        if (currentTetromino != null)
         {
-            if (grid[x, y] == 0)
-                return false; // Line is not complete
-        }
-        return true; // Line is complete
-    }
-
-    void ClearLine(int y)
-    {
-        // Clear the specified line by setting all blocks to 0
-        for (int x = 0; x < width; x++)
-        {
-            grid[x, y] = 0;
-        }
-    }
-
-    void ShiftDownAbove(int startY)
-    {
-        // Shift down all blocks above the specified line
-        for (int y = startY + 1; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
+            Tetromino tetrominoScript = currentTetromino.GetComponent<Tetromino>();
+            if (tetrominoScript != null)
             {
-                grid[x, y - 1] = grid[x, y];
-                // Clear the original position of the block
-                grid[x, y] = 0;
+                if (IsValidPosition(tetrominoScript.GetBlockPositions(moveDirection)))
+                {
+                    currentTetromino.transform.position += moveDirection;
+                }
             }
         }
     }
 
-    public void PlaceTetrominoOnGrid(Transform tetromino)
+    void HandleInput()
     {
-        foreach (Transform block in tetromino)
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
         {
-            Vector2Int position = Vector2Int.RoundToInt(block.position);
-            grid[position.x, position.y] = 1; // Or any other non-zero value to indicate occupancy
+            MoveTetromino(Vector3.left);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+        {
+            MoveTetromino(Vector3.right);
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+        {
+            MoveTetromino(Vector3.down);
         }
     }
-    public bool IsValidPosition(Vector2Int position)
-    {
-        // Check if the specified position is within the boundaries of the game board and not occupied by another block
-        return position.x >= 0 && position.x < width && position.y >= 0 && position.y < height && grid[position.x, position.y] == 0;
-    }
-    
-    public void RemoveCompletedLines()
-    {
-        for (int y = 0; y < height; y++)
-        {
-            if (IsLineComplete(y))
-            {
-                ClearLine(y);
-                ShiftDownAbove(y);
-                y--; // Recheck the same line as it has shifted down
-            }
-        }
-    }
-
-    // Add methods for updating score, managing levels, and handling game over conditions as needed
 }
