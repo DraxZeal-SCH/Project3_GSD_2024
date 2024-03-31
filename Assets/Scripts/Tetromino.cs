@@ -1,18 +1,43 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
-public class Tetromino : MonoBehaviour
+
+/*
+ * An enumerator for containing the different tetrominoes
+ */
+public enum Tetromino
 {
-    // Define block positions relative to the Tetromino's position
-    [SerializeField] private Vector3[] blockPositions;
+    I,
+    O,
+    T,
+    J,
+    L,
+    S,
+    Z
+}
 
-    public Vector2Int[] GetBlockPositions(Vector3 moveDirection)
+
+/*
+ * A Serializable Data structure for containing the data of the individual tetrominoes
+ * Fields:
+ *      -tetromino. The type of tetromino
+ *      -tile. the tile that is used to populate a tetromino's cells. the tiles come in seven colors
+ *      -cells. An array of Vector2Int cooridinates that contain the local positions that make up the shape of the tetromino.
+ */
+[System.Serializable]
+public struct TetrominoData
+{
+    public Tetromino tetromino;
+    public Tile tile;
+    public Vector2Int[] cells {get; private set;} 
+
+
+    /*
+     * A method for initializing a new tetromino.
+     * by getting the tetrominoes data from the static class Data which holds local positional data for representing the shape of the 7 tetrominoes.
+     */
+    public void Initialize()
     {
-        Vector2Int[] movedPositions = new Vector2Int[blockPositions.Length];
-        for (int i = 0; i < blockPositions.Length; i++)
-        {
-            Vector3 movedPosition = blockPositions[i] + transform.position + (Vector3)moveDirection;
-            movedPositions[i] = new Vector2Int(Mathf.RoundToInt(movedPosition.x), Mathf.RoundToInt(movedPosition.y));
-        }
-        return movedPositions;
+        this.cells = Data.Cells[this.tetromino];// gets the positional data for whichever tetromino is being Initialized.
     }
 }
