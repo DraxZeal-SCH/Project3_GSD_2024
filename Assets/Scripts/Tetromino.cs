@@ -30,6 +30,7 @@ public struct TetrominoData
     public Tetromino tetromino;
     public Tile tile;
     public Vector2Int[] cells {get; private set;} 
+    public Vector2Int[,] wallKicks { get; private set;}
 
 
     /*
@@ -39,5 +40,6 @@ public struct TetrominoData
     public void Initialize()
     {
         this.cells = Data.Cells[this.tetromino];// gets the positional data for whichever tetromino is being Initialized.
+        this.wallKicks = Data.WallKicks[this.tetromino];
     }
 }

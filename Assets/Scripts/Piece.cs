@@ -5,6 +5,7 @@ public class Piece : MonoBehaviour
     public Board board { get; private set; } // The game board wich holds the current state of the board and gives access to methods in the Board class.
     public Vector3Int position {  get; private set; }// The current position of the current piece in play
     public TetrominoData data { get; private set; }// The TetrominoData structure. which holds data about the tetromino that is currently in play
+    public int rotationIndex { get; private set; }// The current rotation index for the active piece.
 
     /* An array of the cells that make up the current tetromino. Each tetromino is made up of four cells.
      * Each cell contains some positional information to inform the game of the shape of the tetromino.
@@ -24,6 +25,7 @@ public class Piece : MonoBehaviour
         this.board = board;
         this.position = position; 
         this.data = data;
+        this.rotationIndex = 0;
 
         /* A conditional for ensuring that the cells array is initiallized
          * to an empty array with the same number of cells found in a tetromino.
@@ -45,6 +47,16 @@ public class Piece : MonoBehaviour
     private void Update()
     {
         this.board.Clear(this);// Clearing the current position of the piece on the board board at the start of every frame.
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Rotate(-1);
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            Rotate(1);
+        }
+
 
         if (Input.GetKeyDown(KeyCode.A))
         {
@@ -99,6 +111,101 @@ public class Piece : MonoBehaviour
         while (Move(Vector2Int.down))
         {
             continue;// continues until the piece reaches the bottom of the board.
+        }
+    }
+
+
+    /*
+     * Method for applying rotation to the active piece
+     * uses a rotation matrix to apply a rotation in a given direction.
+     * also tests wether or not to use a wall kick which should stop pieces
+     * from moving out of bounds during rotations against the walls of the board
+     * Parameter: direction. the direction the piece should rotate given as
+     * a value of 1 for rotating clockwise or -1 for counter-clockwise
+     */
+    private void Rotate(int direction)
+    {
+        int originalRotationIndex = this.rotationIndex;// Assigning the current rotation index value to the originalRotationIndex variable
+        this.rotationIndex = Wrap(this.rotationIndex + direction, 0, 4);// Calculating the new rotation index and assigning the new index to the rotationIndex variable
+
+        ApplyRotationMatrix(direction);// Calling the ApplyRotationMatrix method to apply the new rotation to the active piece.
+
+        if (!TestWallKicks(this.rotationIndex, direction))
+        {
+            this.rotationIndex = originalRotationIndex;
+            ApplyRotationMatrix(-direction);
+        }
+    }
+
+    /*
+     * A method for applying the rotation matrix found in the Static Data class
+     * applies the rotation differently for the I and O tetrominoes.
+     */
+    private void ApplyRotationMatrix(int direction)
+    {
+        for (int i = 0; i < this.cells.Length; i++)
+        {
+            Vector3 cell = this.cells[i];
+
+            int x, y;
+
+            switch (this.data.tetromino)
+            {
+                case Tetromino.I:
+                case Tetromino.O:
+                    cell.x -= 0.5f;
+                    cell.y -= 0.5f;
+                    x = Mathf.CeilToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
+                    y = Mathf.CeilToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
+                    break;
+
+                default:
+                    x = Mathf.RoundToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
+                    y = Mathf.RoundToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
+                    break;
+            }
+
+            this.cells[i] = new Vector3Int(x, y, 0);
+
+        }
+    }
+
+    private bool TestWallKicks(int rotationIndex, int rotationDirection)
+    {
+        int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
+
+        for (int i = 0; i < this.data.wallKicks.GetLength(1); i++)
+        {
+            Vector2Int translation = this.data.wallKicks[wallKickIndex, i];
+            if (Move(translation))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int GetWallKickIndex(int rotationIndex, int rotationDirection) 
+    {
+        int wallKickIndex = rotationIndex * 2;
+
+        if(rotationDirection < 0)
+        {
+            wallKickIndex--;
+        }
+
+        return Wrap(wallKickIndex, 0, this.data.wallKicks.GetLength(0));
+    }
+
+    private int Wrap(int input, int min, int max)
+    {
+        if(input < min)
+        {
+            return max - (min - input) % (max - min);
+        }
+        else
+        {
+            return min + (input - min) % (max - min);
         }
     }
 }

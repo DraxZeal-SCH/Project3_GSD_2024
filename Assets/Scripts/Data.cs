@@ -3,7 +3,8 @@ using UnityEngine;
 
 
 /*
- * local positional data that makes up the different shapes of tetrominoes as well as other data to deal with certain circumstances like when rotating next to a wall.
+ * local positional data that makes up the different shapes of tetrominoes as well as other data to deal with certain circumstances like when rotating and 
+ * rotating next to a wall.
  */
 
 public static class Data
