@@ -6,9 +6,23 @@ using UnityEngine.Tilemaps;
 public class Board : MonoBehaviour
 {
     public Tilemap tilemap {  get; private set; } // The tilemap child of the Board game object
+
     public Piece activePiece { get; private set; }// the currently active piece in play (Tetromino)
+    public Piece nextPiece { get; private set; }// the next piece (Tetromino)
+    public Piece savedPiece { get; private set; }// the saved piece (Tetromino)
+
+    private TetrominoData activePieceData; // data for the active piece
+    private TetrominoData nextPieceData; // data for the next piece
+    private TetrominoData savedPieceData; // data for the saved piece
+
     public TetrominoData[] tetrominoes; // An array that contains the information of all 7 possible tetrominoes. 
-    public Vector3Int spawnPosition;// the spawn position for the currently active tetromino.
+
+    public Vector3Int activeSpawnPosition;// the spawn position for the currently active tetromino.
+    public Vector3Int nextSpawnPosition;// the spawn position for the next tetromino.
+    public Vector3Int savedSpawnPosition;// the spawn position for the saved tetromino.
+    private int randomActive;// random number used for the active piece
+    private int randomNext = -1; // random number set for the next piece. -1 signifies null
+
     public Vector2Int boardSize = new Vector2Int(10, 20);// The size of the game board
 
     public RectInt Bounds// The bounds of the board which pieces can not move beyond.
@@ -42,12 +56,78 @@ public class Board : MonoBehaviour
      */
     public void SpawnPiece()
     {
-        int random = Random.Range(0, this.tetrominoes.Length);//chooses a random integer between 0 and the length of the tetrominoes array.
-        TetrominoData data = this.tetrominoes[random];//chooses a random tetrominoe from the array. and assigns its data to the data variable.
+        // If randomNext hasn't been assigned (-1), calculate nextPieceData
+        if (randomNext == -1)
+        {
+            randomNext = Random.Range(0, tetrominoes.Length);
+            nextPieceData = tetrominoes[randomNext];
+        }
 
-        this.activePiece.Initialize(this, this.spawnPosition, data);// initializes the active piece. passing in the board, spawn position, and the data for the piece.
-        Set(this.activePiece);// calls the set method to set the piece on the board and draw the tiles that make up the piece.
+        // Assign nextPieceData to activePieceData
+        activePieceData = nextPieceData;
 
+        // Choose a new random tetromino for nextPieceData, ensuring it's different from the active piece
+        int newRandomNext = Random.Range(0, tetrominoes.Length);
+        while (newRandomNext == randomNext)
+        {
+        newRandomNext = Random.Range(0, tetrominoes.Length);
+        }
+        randomNext = newRandomNext; //assigns the old randomNext to the new
+        nextPieceData = tetrominoes[randomNext];// gets the relative tetromino
+        
+        if(nextPiece != null) { // if nextPiece isnt null it tries to clear it
+            Clear(nextPiece);
+            }
+        // Initialize nextPiece with nextPieceData and sets it on the board
+        nextPiece = GetComponentInChildren<Piece>();
+        nextPiece.Initialize(this, nextSpawnPosition, nextPieceData);
+        Set(nextPiece);
+
+        // Initialize activePiece with activePieceData and sets it on the board
+        activePiece = GetComponentInChildren<Piece>();
+        activePiece.Initialize(this, activeSpawnPosition, activePieceData);
+        Set(activePiece);
+        
+    }
+
+    public void SavePiece() // Function to save a piece, called in Piece.cs whenever "R" is pressed
+    {
+        Vector3Int tempActivePosition;//Temp postion so that the piece stays in the same spot.
+
+        if(activePiece != null){ // if theres an active piece on the board it gets its postion, otherwise it finds it from the variable
+            tempActivePosition = activePiece.position;
+        }
+        else{
+            tempActivePosition = activeSpawnPosition;
+        }
+
+        if (savedPiece == null)// If saved piece is null then it creates it
+        {
+            savedPiece = GetComponentInChildren<Piece>();
+            // Clone the TetrominoData of the active piece to save it
+            savedPieceData = activePieceData.Clone();
+            savedPiece.Initialize(this, savedSpawnPosition, savedPieceData);
+            Set(savedPiece);
+
+            Clear(activePiece);//clears activePiece
+            SpawnPiece(); // recalls SpawnPiece so that the game continues
+        }
+        else
+        {
+            // Swap the TetrominoData between activePieceData and savedPieceData
+            TetrominoData tempData = activePieceData.Clone(); // Clone active piece data
+            activePieceData = savedPieceData.Clone(); // Assign saved piece data to active piece
+            savedPieceData = tempData; // Assign original active piece data to saved piece
+
+            // Clears saved piece and then spawns it at the saved postion
+            Clear(savedPiece);
+            savedPiece.Initialize(this, savedSpawnPosition, savedPieceData);
+            Set(savedPiece);
+            //clears active piece and then spawns it at the temp active postion
+            Clear(activePiece);
+            activePiece.Initialize(this, tempActivePosition, activePieceData);
+            Set(activePiece);
+        }
     }
 
     /*
@@ -93,8 +173,9 @@ public class Board : MonoBehaviour
      *      - True. If the piece can move to the position.
      *      - False. If the piece cannot move to the position.
      */
-    public bool IsValidPosition(Piece piece, Vector3Int position)
+    public bool IsValidPosition(Vector3Int position)
     {
+        Piece piece = activePiece;
         RectInt bounds = this.Bounds;// the bounds of the game board.
 
         for(int i = 0; i < piece.cells.Length; i++)// loop through all the cells that make up the tetromino
@@ -112,7 +193,6 @@ public class Board : MonoBehaviour
                 return false;// the position is invalid
             }
         }
-
         return true;// if the above loop completes without issue tha position is valid.
 
     }

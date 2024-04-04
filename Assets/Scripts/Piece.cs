@@ -6,6 +6,7 @@ public class Piece : MonoBehaviour
     public Vector3Int position {  get; private set; }// The current position of the current piece in play
     public TetrominoData data { get; private set; }// The TetrominoData structure. which holds data about the tetromino that is currently in play
     public int rotationIndex { get; private set; }// The current rotation index for the active piece.
+    private bool canMove;
 
     /* An array of the cells that make up the current tetromino. Each tetromino is made up of four cells.
      * Each cell contains some positional information to inform the game of the shape of the tetromino.
@@ -47,7 +48,7 @@ public class Piece : MonoBehaviour
     private void Update()
     {
         this.board.Clear(this);// Clearing the current position of the piece on the board board at the start of every frame.
-
+    
         if (Input.GetKeyDown(KeyCode.Q))
         {
             Rotate(-1);
@@ -76,7 +77,11 @@ public class Piece : MonoBehaviour
         {
             Drop();
         }
-
+        //If r is pressed then it calls the SavePiece function from the board class
+        if (Input.GetKeyDown(KeyCode.R)){
+            this.board.SavePiece();
+        }
+    
             this.board.Set(this);// Setting the current position of the piece on the board board at the end of every frame.
     }
 
@@ -84,7 +89,7 @@ public class Piece : MonoBehaviour
      * A method which is called whenever a piece needs to be moved.
      * Parameter: translation. A Vector2Int position holding the translation direction for the movement of the piece.
      * 
-     * Return: boolean. Returns wether the movement was carried out successfully or not. True if movement was successful : False if movement failed
+     * Return: boolean. Returns whether the movement was carried out successfully or not. True if movement was successful : False if movement failed
      *            
      */
     private bool Move(Vector2Int translation)
@@ -93,7 +98,7 @@ public class Piece : MonoBehaviour
         newPosision.x += translation.x;// Adding the translation.x position to the newPosition.x (moving the piece to the right or left) 
         newPosision.y += translation.y;// Adding the translation.y position to the newPosition.y (moving the piece up or down. in this case only down)
 
-        bool valid = this.board.IsValidPosition(this, newPosision);// call to the IsValidPosition method in the Board class
+        bool valid = this.board.IsValidPosition(newPosision);// call to the IsValidPosition method in the Board class
 
         if (valid)// if the new position is valid for movement.
         {
@@ -113,7 +118,6 @@ public class Piece : MonoBehaviour
             continue;// continues until the piece reaches the bottom of the board.
         }
     }
-
 
     /*
      * Method for applying rotation to the active piece
