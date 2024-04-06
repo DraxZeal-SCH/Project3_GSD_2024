@@ -24,6 +24,8 @@ public class Board : MonoBehaviour
     private int randomNext = -1; // random number set for the next piece. -1 signifies null
 
     public Vector2Int boardSize = new Vector2Int(10, 20);// The size of the game board
+    private ScoreUI scoreUI;
+    public int score = 0; //score varaible
 
     public RectInt Bounds// The bounds of the board which pieces can not move beyond.
     { get
@@ -48,6 +50,7 @@ public class Board : MonoBehaviour
     private void Start()
     {
         SpawnPiece();// spawns a new piece at the start of the game.
+         scoreUI = FindObjectOfType<ScoreUI>();
     }
 
 
@@ -195,5 +198,58 @@ public class Board : MonoBehaviour
         }
         return true;// if the above loop completes without issue tha position is valid.
 
+    }
+    public void ClearLines()
+
+    {
+        RectInt bounds = this.Bounds;
+        int row = bounds.yMin;
+        while (row < bounds.yMax)
+        {
+            if(IsLineFull(row)){// if the line is full for the row that we are currently on, then call the line clear function thast down below
+                LineClear(row);
+                score += 100;
+                 if (scoreUI != null)
+            {
+                scoreUI.UpdateScore(score); // Update score displayed in UI
+            }
+            } else{ //increase row when its not full
+                row++;
+            }
+        }
+
+    }
+    // this function makes it so it checks if the line is full to ret
+    private bool IsLineFull(int row)
+    {
+        RectInt bounds = this.Bounds;
+        for  (int col = bounds.xMin; col < bounds.xMax; col++)
+        {
+            Vector3Int position = new Vector3Int(col, row, 0);
+            if (!this.tilemap.HasTile(position)){
+                return false;
+            }
+        }
+        return true;
+    }
+    private void LineClear(int row){
+        RectInt bounds = this.Bounds;
+        for  (int col = bounds.xMin; col < bounds.xMax; col++)// clears all tge tiles of the line that is being clearedand 
+        {
+            Vector3Int position = new Vector3Int(col, row, 0);
+            this.tilemap.SetTile(position, null);
+        }
+
+       while (row < bounds.yMax){
+        for  (int col = bounds.xMin; col < bounds.xMax; col++)
+        {
+            Vector3Int position = new Vector3Int(col, row + 1, 0);// this is grabbing the row above it 
+            TileBase above = this.tilemap.GetTile(position);
+
+            position = new Vector3Int(col, row, 0);
+            this.tilemap.SetTile(position, above);
+        } 
+        row++;
+       }
     }
 }
