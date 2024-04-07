@@ -9,25 +9,19 @@ public class Board : MonoBehaviour
     public Tilemap tilemap {  get; private set; } // The tilemap child of the Board game object
 
     public Piece activePiece { get; private set; }// the currently active piece in play (Tetromino)
-    public Piece nextPiece { get; private set; }// the next piece (Tetromino)
-    public Piece savedPiece { get; private set; }// the saved piece (Tetromino) 
 
     private TetrominoData activePieceData; // data for the active piece
-    private TetrominoData nextPieceData; // data for the next piece
-    private TetrominoData savedPieceData; // data for the saved piece
 
     public TetrominoData[] tetrominoes; // An array that contains the information of all 7 possible tetrominoes. 
 
-    public Vector3Int activeSpawnPosition;// the spawn position for the currently active tetromino.
-    public Vector3Int nextSpawnPosition;// the spawn position for the next tetromino.
-    public Vector3Int savedSpawnPosition;// the spawn position for the saved tetromino.
-    private int randomActive;// random number used for the active piece
-    private int randomNext = -1; // random number set for the next piece. -1 signifies null
+    public Vector3Int activeSpawnPosition;// the spawn position for the active tetromino.
 
     public Vector2Int boardSize = new Vector2Int(10, 20);// The size of the game board
     private ScoreUI scoreUI;
 
     public int score = 0; //score varaible
+
+    private bool gameOver = false; // flag to indicate if the game is over
 
     public RectInt Bounds// The bounds of the board which pieces can not move beyond.
     { get
@@ -61,6 +55,11 @@ public class Board : MonoBehaviour
      */
     public void SpawnPiece()
     {
+        if(gameOver){
+            Clear(activePiece);
+            return;
+        }
+        else{
         int random = Random.Range(0, tetrominoes.Length);
         TetrominoData data = tetrominoes[random];
 
@@ -69,49 +68,19 @@ public class Board : MonoBehaviour
         if (IsValidPosition(activePiece, activeSpawnPosition)) {
             Set(activePiece);
         } else {
+            GameOver();
+        }
+        }
+    }
+    public void GameOver()
+    {
+        gameOver = true;
+        tilemap.ClearAllTiles();
+        if(scoreUI != null){
+            scoreUI.scoreText.text = ("Game Over");
         }
     }
    
-
-    public void SavePiece() // Function to save a piece, called in Piece.cs whenever "R" is pressed
-    {
-        Vector3Int tempActivePosition;//Temp postion so that the piece stays in the same spot.
-
-        if(activePiece != null){ // if theres an active piece on the board it gets its postion, otherwise it finds it from the variable
-            tempActivePosition = activePiece.position;
-        }
-        else{
-            tempActivePosition = activeSpawnPosition;
-        }
-
-        if (savedPiece == null)// If saved piece is null then it creates it
-        {
-            savedPiece = GetComponentInChildren<Piece>();
-            // Clone the TetrominoData of the active piece to save it
-            savedPieceData = activePieceData.Clone();
-            savedPiece.Initialize(this, savedSpawnPosition, savedPieceData);
-            Set(savedPiece);
-            Clear(activePiece);//clears activePiece
-            SpawnPiece(); // recalls SpawnPiece so that the game continues
-        }
-        else
-        {
-            // Swap the TetrominoData between activePieceData and savedPieceData
-            TetrominoData tempData = activePieceData.Clone(); // Clone active piece data
-            activePieceData = savedPieceData.Clone(); // Assign saved piece data to active piece
-            savedPieceData = tempData; // Assign original active piece data to saved piece
-
-            // Clears saved piece and then spawns it at the saved postion
-            Clear(savedPiece);
-            savedPiece.Initialize(this, savedSpawnPosition, savedPieceData);
-            Set(savedPiece);
-            //clears active piece and then spawns it at the temp active postion
-            Clear(activePiece);
-            activePiece.Initialize(this, tempActivePosition, activePieceData);
-            Set(activePiece);
-        }
-    }
-
     /*
      * A method for setting pieces on the board
      * Parameter: The piece to be set.
@@ -185,7 +154,7 @@ public class Board : MonoBehaviour
         {
             if(IsLineFull(row)){// if the line is full for the row that we are currently on, then call the line clear function thast down below
                 LineClear(row);
-                score += 100;
+                score += 1;
                  if (scoreUI != null)
             {
                 scoreUI.UpdateScore(score); // Update score displayed in UI

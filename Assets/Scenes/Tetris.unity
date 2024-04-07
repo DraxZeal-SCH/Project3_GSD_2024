@@ -398,8 +398,6 @@ MonoBehaviour:
   - tetromino: 6
     tile: {fileID: 11400000, guid: 9b22438b238c0a540986b57990bd7d34, type: 2}
   activeSpawnPosition: {x: 0, y: 7, z: 0}
-  nextSpawnPosition: {x: -10, y: 5, z: 0}
-  savedSpawnPosition: {x: -10, y: -5, z: 0}
   boardSize: {x: 10, y: 20}
   score: 0
 --- !u!114 &751582077
@@ -415,7 +413,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stepDelay: 1
-  lockDelay: 10
+  lockDelay: 2
+  difficultyModifier: 0.001
 --- !u!1 &1533185891
 GameObject:
   m_ObjectHideFlags: 0

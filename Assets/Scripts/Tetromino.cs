@@ -42,20 +42,5 @@ public struct TetrominoData
         this.cells = Data.Cells[this.tetromino];// gets the positional data for whichever tetromino is being Initialized.
         this.wallKicks = Data.WallKicks[this.tetromino];
     }
-    // Constructor for tetrominos. Mostly used for the next piece and saved piece in board class
-    public TetrominoData(Tetromino tetromino, Tile tile, Vector2Int[] cells, Vector2Int[,] wallKicks)
-    {
-        this.tetromino = tetromino;
-        this.tile = tile;
-        this.cells = cells;
-        this.wallKicks = wallKicks;
-    }
 
-    // Custom cloning method, mostly used in the board class for next and saved pieces
-    public TetrominoData Clone()
-    {
-        // Perform a deep copy
-        TetrominoData clonedData = new TetrominoData(tetromino, tile, (Vector2Int[])cells.Clone(), (Vector2Int[,])wallKicks.Clone());
-        return clonedData;
-    }
 }

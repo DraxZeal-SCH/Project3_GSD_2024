@@ -10,7 +10,12 @@ public class Piece : MonoBehaviour
     public float stepDelay = 1f;
     public float lockDelay = 0.5f;
     private float stepTime;
-    private float locktime;
+    private float lockTime;
+    private float modifiedStepDelay;
+
+    private int score;
+    public float difficultyModifier = .01f;
+
 
     /* An array of the cells that make up the current tetromino. Each tetromino is made up of four cells.
      * Each cell contains some positional information to inform the game of the shape of the tetromino.
@@ -31,8 +36,8 @@ public class Piece : MonoBehaviour
         this.position = position; 
         this.data = data;
         this.rotationIndex = 0;
-         this.stepTime = Time.time + this.stepDelay;
-        this.locktime = 0f;
+        this.stepTime = Time.time + this.stepDelay;
+        this.lockTime = 0f;
 
         /* A conditional for ensuring that the cells array is initiallized
          * to an empty array with the same number of cells found in a tetromino.
@@ -54,7 +59,8 @@ public class Piece : MonoBehaviour
     private void Update()
     {
         this.board.Clear(this);// Clearing the current position of the piece on the board board at the start of every frame.
-        this.locktime += Time.deltaTime;// sets it back to lock time which is 0
+        this.lockTime += Time.deltaTime;// sets it back to lock time which is 0
+        this.score = this.board.score;
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -87,28 +93,30 @@ public class Piece : MonoBehaviour
         if (Time.time >= this.stepTime){
             Step();
         }
-        //If r is pressed then it calls the SavePiece function from the board class
-        if (Input.GetKeyDown(KeyCode.R)){
-            this.board.SavePiece();
-        }
     
             this.board.Set(this);// Setting the current position of the piece on the board board at the end of every frame.
     }
-     private void Step(){
-          this.stepTime  = Time.time + this.stepDelay; //makes it so it keeps getting called over and over again every one second.
-        Move(Vector2Int.down);
-        if(this.locktime >= this.lockDelay){
-            Lock();
-        }
+        private void Step()
+        {
+            this.stepTime = Time.time + (stepDelay - (difficultyModifier * score)); 
+            if (lockTime >= lockDelay)
+            {
+                Lock();
+            }
         }
         // a mathod to make sure the pieces lock into place
         //which will also spawn the next one as soon as it locks
         // it basically goes on order of its set then u clear a line if applicable and next is to spawn piece
 
         private void Lock(){
+            if(Move(Vector2Int.down)){
+                this.stepTime = Time.time + (stepDelay - (difficultyModifier * score));
+            }
+            else{
             this.board.Set(this);
             this.board.ClearLines();
             this.board.SpawnPiece();
+            }
         }
 
     /*
