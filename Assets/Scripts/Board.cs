@@ -154,7 +154,7 @@ public class Board : MonoBehaviour
         {
             if(IsLineFull(row)){// if the line is full for the row that we are currently on, then call the line clear function thast down below
                 LineClear(row);
-                score += 1;
+                score += 100;
                  if (scoreUI != null)
             {
                 scoreUI.UpdateScore(score); // Update score displayed in UI

@@ -414,7 +414,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stepDelay: 1
   lockDelay: 2
-  difficultyModifier: 0.001
+  difficultyModifier: 0.0001
 --- !u!1 &1533185891
 GameObject:
   m_ObjectHideFlags: 0
