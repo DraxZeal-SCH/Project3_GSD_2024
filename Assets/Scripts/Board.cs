@@ -113,7 +113,6 @@ public class Board : MonoBehaviour
             savedPieceData = activePieceData.Clone();
             savedPiece.Initialize(this, savedSpawnPosition, savedPieceData);
             Set(savedPiece);
-
             Clear(activePiece);//clears activePiece
             SpawnPiece(); // recalls SpawnPiece so that the game continues
         }
