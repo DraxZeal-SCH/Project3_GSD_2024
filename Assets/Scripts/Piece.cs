@@ -124,7 +124,7 @@ public class Piece : MonoBehaviour
         newPosision.x += translation.x;// Adding the translation.x position to the newPosition.x (moving the piece to the right or left) 
         newPosision.y += translation.y;// Adding the translation.y position to the newPosition.y (moving the piece up or down. in this case only down)
 
-        bool valid = this.board.IsValidPosition(newPosision);// call to the IsValidPosition method in the Board class
+        bool valid = this.board.IsValidPosition(this, newPosision);// call to the IsValidPosition method in the Board class
 
         if (valid)// if the new position is valid for movement.
         {

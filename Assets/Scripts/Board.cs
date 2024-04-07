@@ -61,39 +61,17 @@ public class Board : MonoBehaviour
      */
     public void SpawnPiece()
     {
-        // If randomNext hasn't been assigned (-1), calculate nextPieceData
-        if (randomNext == -1)
-        {
-            randomNext = Random.Range(0, tetrominoes.Length);
-            nextPieceData = tetrominoes[randomNext];
+        int random = Random.Range(0, tetrominoes.Length);
+        TetrominoData data = tetrominoes[random];
+
+        activePiece.Initialize(this, activeSpawnPosition, data);
+
+        if (IsValidPosition(activePiece, activeSpawnPosition)) {
+            Set(activePiece);
+        } else {
         }
-
-        // Assign nextPieceData to activePieceData
-        activePieceData = nextPieceData;
-
-        // Choose a new random tetromino for nextPieceData, ensuring it's different from the active piece
-        int newRandomNext = Random.Range(0, tetrominoes.Length);
-        while (newRandomNext == randomNext)
-        {
-        newRandomNext = Random.Range(0, tetrominoes.Length);
-        }
-        randomNext = newRandomNext; //assigns the old randomNext to the new
-        nextPieceData = tetrominoes[randomNext];// gets the relative tetromino
-        
-        if(nextPiece != null) { // if nextPiece isnt null it tries to clear it
-            Clear(nextPiece);
-            }
-        // Initialize nextPiece with nextPieceData and sets it on the board
-        nextPiece = GetComponentInChildren<Piece>();
-        nextPiece.Initialize(this, nextSpawnPosition, nextPieceData);
-        Set(nextPiece);
-
-        // Initialize activePiece with activePieceData and sets it on the board
-        activePiece = GetComponentInChildren<Piece>();
-        activePiece.Initialize(this, activeSpawnPosition, activePieceData);
-        Set(activePiece);
-        
     }
+   
 
     public void SavePiece() // Function to save a piece, called in Piece.cs whenever "R" is pressed
     {
@@ -177,9 +155,8 @@ public class Board : MonoBehaviour
      *      - True. If the piece can move to the position.
      *      - False. If the piece cannot move to the position.
      */
-    public bool IsValidPosition(Vector3Int position)
+    public bool IsValidPosition(Piece piece, Vector3Int position)
     {
-        Piece piece = activePiece;
         RectInt bounds = this.Bounds;// the bounds of the game board.
 
         for(int i = 0; i < piece.cells.Length; i++)// loop through all the cells that make up the tetromino
